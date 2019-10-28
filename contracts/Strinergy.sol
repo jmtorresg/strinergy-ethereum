@@ -1,4 +1,4 @@
-pragma solidity ^0.5.11;
+pragma solidity ^0.5;
 
 // This simple ERC20 contract represents a tokenized energy project
 // It has a fixed supply of tokens that are emitted on contract creation
@@ -8,7 +8,7 @@ contract AccessToken {
     string public constant symbol = "SXA";
     uint8 public constant decimals = 18; // TBD depending on the unit we choose
 
-    address _owner;
+    address payable _owner; // This address is payable because of the kill function
     uint256 _totalSupply;
     mapping(address => uint256) balances;
     mapping(address => mapping(address => uint256)) allowed;
@@ -97,6 +97,11 @@ contract AccessToken {
     function getParticipants() public view returns (address[] memory) {
         return participants;
     }
+
+    function kill() public {
+        require(msg.sender == _owner, "Only the owner of the contract can kill it");
+        selfdestruct(_owner);
+    }
 }
 
 // This is an ERC20-compatible contract whose tokens represent energy production
@@ -105,7 +110,7 @@ contract EnergyToken {
     string public constant symbol = "SXE";
     uint8 public constant decimals = 0; // TBD depending on the unit we choose
 
-    address _owner;
+    address payable _owner;
     uint256 _totalSupply;
     mapping(address => uint256) balances;
     mapping(address => mapping(address => uint256)) allowed;
@@ -186,6 +191,10 @@ contract EnergyToken {
         return true;
     }
 
+    function projectBalance(address project) public view returns (uint256) {
+        return projectBalances[project];
+    }
+
     // This function lets a production meter notify it has produced a certain amount of energy
     function productionNotify(uint amount) public returns (bool) {
         require(registeredMeterIds[msg.sender], "Meter is not registered");
@@ -221,5 +230,10 @@ contract EnergyToken {
         }
 
         return true;
+    }
+
+    function kill() public {
+        require(msg.sender == _owner, "Only the owner of the contract can kill it");
+        selfdestruct(_owner);
     }
 }
